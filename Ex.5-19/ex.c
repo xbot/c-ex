@@ -1,5 +1,5 @@
 /*
- * Exercise 5-18. Make dcl recover from input errors.
+ * Exercise 5-19. Modify undcl so that it does not add redundant parentheses to declarations.
  */
 
 #include <stdio.h>
@@ -23,13 +23,34 @@ int hastoken = 0;
 
 int main() /* convert declaration to words */
 {
-    while (gettoken() != EOF) { /* 1st token on line */
-        strcpy(datatype, token); /* is the datatype */
-        out[0] = '\0';
-        dcl(); /* parse rest of line */
-        if (tokentype != '\n')
-            printf("syntax error\n");
-        printf("%s: %s %s\n", name, out, datatype);
+    int type;
+    char temp[MAXTOKEN];
+    while (gettoken() != EOF) {
+        strcpy(out, token);
+        while ((type = gettoken()) != '\n')
+            if (type == PARENS || type == BRACKETS)
+                strcat(out, token);
+            else if (type == '*') {
+                int	count = 0;
+                do {
+                    count++;
+                    gettoken();
+                } while (tokentype == '*');
+                temp[0] = '\0';
+                if (tokentype != NAME) 
+                    strcat(temp, "(");
+                while (count--)
+                    strcat(temp, "*");
+                strcat(temp, out);
+                if (tokentype != NAME) 
+                    strcat(temp, ")");
+                strcpy(out, temp);
+                continue;
+            } else if (type == NAME) {
+                sprintf(temp, "%s %s", token, out);
+                strcpy(out, temp);
+            } else
+                printf("invalid input at %s\n", token);
     }
     return 0;
 }
